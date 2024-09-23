@@ -26,14 +26,14 @@
 
 
 */
-define(['N/email', 'N/record', 'N/search', 'N/ui/serverWidget'],
+define(['N/email', 'N/record', 'N/search', 'N/ui/serverWidget','N/runtime'],
     /**
  * @param{email} email
  * @param{record} record
  * @param{search} search
  * @param{serverWidget} serverWidget
  */
-    (email, record, search, serverWidget) => {
+    (email, record, search, serverWidget, runtime) => {
         /**
          * Defines the Suitelet script trigger point.
          * @param {Object} scriptContext
@@ -65,8 +65,9 @@ define(['N/email', 'N/record', 'N/search', 'N/ui/serverWidget'],
                         let recordId = createRecordOfFeedback(scriptContext.request.parameters, customerId)
                         let salesRepId = findSalesRep(customerId);
 
-
-                        sendEmail(1852);
+                        let adminId = getAdminId();
+                        log.debug("admin id" , adminId);
+                        sendEmail(adminId);
                         sendEmail(salesRepId);
 
                         let html = htmlCreator(customerName, customerEmail, subject, message, customerId, recordId);
@@ -320,7 +321,7 @@ define(['N/email', 'N/record', 'N/search', 'N/ui/serverWidget'],
                     author: -5,
                     recipients: recipientsId,
                     subject: "Update on Record Creation",
-                    body: "Someone has created an customer feedback record",
+                    body: "Hi sir, Someone has created an customer feedback record",
                 });
             } catch (err) {
                 log.error("Error on sending mail", err);
@@ -446,6 +447,31 @@ define(['N/email', 'N/record', 'N/search', 'N/ui/serverWidget'],
                 `
                 return html;
             }
+        }
+
+
+        function getAdminId(){
+            let internalId = 0;
+            let adminSearch = search.create({
+                type: "employee",
+                filters:
+                [
+                   ["role","anyof","3"], 
+                   "AND", 
+                   ["isinactive","is","F"]
+                ],
+                columns:
+                [
+                   search.createColumn({name: "internalid", label: "Internal ID"})
+                ]
+             });
+
+             adminSearch.run().each(function (result) {
+                internalId = result.getValue({
+                    name: "internalid"
+                })
+             });
+             return internalId;
         }
         return { onRequest }
 
