@@ -1,0 +1,27 @@
+<suitelet scriptid="customscript_jj_sl_feedback_otp_7865">
+  <description>Create a custom NetSuite record type for customer details, allow external entries,&#xd;
+auto-link customers by email, send notifications to the Admin and Sales Rep, and&#xd;
+implement a duplicate record check.</description>
+  <isinactive>F</isinactive>
+  <name>JJ SL FEEDBACK FORM OTP-7865</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/05_09_2024/jj_sl_feedback_form_otp_7528.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_jj_sl_feedback_otp_7865">
+      <allemployees>F</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
+      <eventtype></eventtype>
+      <isdeployed>T</isdeployed>
+      <isonline>T</isonline>
+      <loglevel>DEBUG</loglevel>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>RELEASED</status>
+      <title>JJ SL FEEDBACK FORM OTP-7865</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>
