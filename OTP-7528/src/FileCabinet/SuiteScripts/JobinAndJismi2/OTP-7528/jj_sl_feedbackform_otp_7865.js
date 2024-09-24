@@ -65,9 +65,7 @@ define(['N/email', 'N/record', 'N/search', 'N/ui/serverWidget','N/runtime'],
                         let recordId = createRecordOfFeedback(scriptContext.request.parameters, customerId)
                         let salesRepId = findSalesRep(customerId);
 
-                        let adminId = getAdminId();
-                        log.debug("admin id" , adminId);
-                        sendEmail(adminId);
+                        sendEmail(getUserId("mfgfun070224rf@netsuite.com"));
                         sendEmail(salesRepId);
 
                         let html = htmlCreator(customerName, customerEmail, subject, message, customerId, recordId);
@@ -101,7 +99,7 @@ define(['N/email', 'N/record', 'N/search', 'N/ui/serverWidget','N/runtime'],
         */
         function createExternallyLinkedForm() 
         {
-            var form = serverWidget.createForm({
+            let form = serverWidget.createForm({
                 title: 'Customer Feedback Form'
             });
 
@@ -151,7 +149,7 @@ define(['N/email', 'N/record', 'N/search', 'N/ui/serverWidget','N/runtime'],
                 let customerEmail = scriptContextForm.custpage_jj_customer_email_otp7528;
                 let subject = scriptContextForm.custpage_jj_subject_otp7528;
                 let message = scriptContextForm.custpage_jj_message_otp7528;
-                var feedbackRecord = record.create({
+                let feedbackRecord = record.create({
                     type: "customrecord_jj_customer_feedback",
                     isDynamic: true,
                 });
@@ -293,12 +291,22 @@ define(['N/email', 'N/record', 'N/search', 'N/ui/serverWidget','N/runtime'],
 
         function findSalesRep(customerId) {
             try {
-                var fieldLookUp = search.lookupFields({
+                let fieldLookUp = search.lookupFields({
                     type: search.Type.CUSTOMER,
                     id: customerId,
                     columns: ['salesrep']
                 });
-                return fieldLookUp.salesrep[0].value
+                let employeeLookup = search.lookupFields({
+                    type: search.Type.EMPLOYEE,
+                    id: fieldLookUp.salesrep[0].value,
+                    columns: ['isinactive']
+                });
+                if (!employeeLookup.isinactive)
+                {
+                    return fieldLookUp.salesrep[0].value;
+                }else{
+                    throw "No Sales Rep For The Customer";
+                }
 
             } catch (err) {
                 log.error("Error from findsalesrep function", err);
@@ -317,11 +325,30 @@ define(['N/email', 'N/record', 'N/search', 'N/ui/serverWidget','N/runtime'],
 
         function sendEmail(recipientsId) {
             try {
+                let authorLookup = search.lookupFields({
+                    type: search.Type.EMPLOYEE,
+                    id: getUserId("kabernathy@netsuite.com"),
+                    columns: ['entityid']
+                });
+                let authorName = authorLookup.entityid;
+                let recipientsLookup = search.lookupFields({
+                    type: search.Type.EMPLOYEE,
+                    id:  recipientsId,
+                    columns: ['entityid']
+                });
+                let recipientsName = recipientsLookup.entityid;
                 email.send({
-                    author: -5,
+                    author: getUserId("kabernathy@netsuite.com"),
                     recipients: recipientsId,
-                    subject: "Update on Record Creation",
-                    body: "Hi sir, Someone has created an customer feedback record",
+                    subject: "Customer Feedback Record Created",
+                    body: `Dear ${recipientsName},
+
+                    I hope this email finds you well. I would like to inform you that a new customer feedback record has been created in our system.
+
+                    Please let me know if any further action is required on this.
+
+                    Best regards,
+                    ${authorName}`,
                 });
             } catch (err) {
                 log.error("Error on sending mail", err);
@@ -450,19 +477,30 @@ define(['N/email', 'N/record', 'N/search', 'N/ui/serverWidget','N/runtime'],
         }
 
 
-        function getAdminId(){
+        /**
+            * Retrieves the internal ID of an employee based on their email.
+            * 
+            * This function performs a search on the "employee" record type to find the employee
+            * with the specified email. The search filters out inactive employees and returns
+            * the internal ID of the matching employee.
+            * 
+            * @param {string} email - The email of the employee to search for.
+            * @returns {number} The internal ID of the employee, or 0 if no matching employee is found.
+        */
+
+        function getUserId(email){
             let internalId = 0;
             let adminSearch = search.create({
                 type: "employee",
                 filters:
                 [
-                   ["role","anyof","3"], 
+                   ["email","is",email], 
                    "AND", 
                    ["isinactive","is","F"]
                 ],
                 columns:
                 [
-                   search.createColumn({name: "internalid", label: "Internal ID"})
+                   search.createColumn({name: "internalid", label: "Internal ID",sort: search.Sort.ASC})
                 ]
              });
 
