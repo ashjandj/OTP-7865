@@ -21,7 +21,7 @@
  * 
 
  * 
- * Revision History: Nil
+ * Revision History: 1.0
  
 
 
@@ -128,6 +128,7 @@ define(['N/email', 'N/record', 'N/search', 'N/ui/serverWidget','N/runtime'],
             form.addSubmitButton({
                 label: 'Submit Button'
             });
+            
             return form;
         }
 
